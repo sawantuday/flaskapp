@@ -8,12 +8,33 @@ import hit
 
 
 startTime = datetime.datetime.now().strftime("%Y-%b-%d %H:%M:%S")
+killApp = False
 
 app = Flask(__name__)
+
+@app.route("/healthcheck")
+def healthcheck():
+    global killApp
+
+    if killApp:
+        raise Exception("Sorry, this container is killed")
+    
+    return "hello"
+
+@app.route("/kill")
+def killapp():
+    global killApp
+    killApp = True
+    return "Ok, setting app to be killed"
 
 @app.route("/")
 def show_details() :
     global startTime
+    global killApp
+
+    if killApp:
+        raise Exception("Sorry, this container is killed")
+
     return "<html>" + \
            "<head><title>Docker + Flask Demo</title></head>" + \
            "<body>" + \
@@ -24,6 +45,8 @@ def show_details() :
            "<tr><td> Remote Address </td> <td>" + request.remote_addr + "</td> </tr>" \
            "<tr><td> Server Hit </td> <td>" + str(hit.getServerHitCount()) + "</td> </tr>" \
            "</table>" + \
+            "<hr/>" + \
+            "<span><a href='/kill'>Kill this container</a></span>" + \
            "</body>" + \
            "</html>"
 
